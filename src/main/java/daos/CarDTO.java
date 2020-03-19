@@ -1,8 +1,8 @@
-package models;
+package daos;
 
-import daos.DTO;
+import models.DTO;
 
-public class Car implements DTO {
+public class CarDTO implements DTO {
 
     private int id;
     private String make;
@@ -10,7 +10,15 @@ public class Car implements DTO {
     private int year;
     private String color;
 
-    public Car() {
+    public CarDTO() {
+    }
+
+    public CarDTO(int id, String make, String model, int year, String color) {
+        this.id = id;
+        this.make = make;
+        this.model = model;
+        this.year = year;
+        this.color = color;
     }
 
     public void setId(int id) {
@@ -51,5 +59,10 @@ public class Car implements DTO {
 
     public int getId() {
         return id;
+    }
+
+    @Override
+    public int getCarById() {
+        return getId();
     }
 }

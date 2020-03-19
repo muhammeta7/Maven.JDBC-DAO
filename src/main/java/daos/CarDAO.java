@@ -1,116 +1,114 @@
 package daos;
 
-import models.Car;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CarDAO extends DAO<Car>{
+public class CarDAO implements DAO{
 
     // Queries
     private static final String INSERT = "INSERT INTO cars" +
-            "(make, model, year, color)" +
-            "values(?,?,?,?)";
-    private static final String FIND_ONE = "SELECT * FROM cars WHERE id = ?";
+            "(id, make, model, year, color)" +
+            "values(?,?,?,?,?)";
     private static final String FIND_ALL = "SELECT * FROM cars";
-    private static final String UPDATE = "UPDATE cars SET id = ?, make = ?, model = ?, year = ?, color = ?  WHERE id = ?";
-    private static final String DELETE = "DELETE FROM cars WHERE id = ?";
 
-    public CarDAO(Connection connection) {
-        super(connection);
-    }
+    Connection connection = AppRunner.getConnection();
 
+    public CarDTO findById(int id) {
 
-    public Car findById(int id) {
-        Car car = null;
-        try(PreparedStatement pstmt = connection.prepareStatement(FIND_ONE)){
-            pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()){
-                car = getCarFromResultSet(rs);
-
+        try{
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery("SELECT * FROM cars WHERE id = " + id);
+            if(rs.next()){
+                return getCarFromResultSet(rs);
             }
-        }catch(SQLException e) {
+        } catch(SQLException e){
             e.printStackTrace();
         }
-        return car;
+        return null;
+
     }
 
-    public List<Car> findAll() {
-        List<Car> cars = new ArrayList<>();
-        Car car = null;
+    public List<CarDTO> findAll() {
 
-        try(PreparedStatement pstmt = connection.prepareStatement(FIND_ALL);){
-            ResultSet rs = pstmt.executeQuery();
+        List<CarDTO> carDTOS = new ArrayList<>();
+        try{
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(FIND_ALL);
             while(rs.next()){
-                car = getCarFromResultSet(rs);
-                cars.add(car);
+                carDTOS.add(getCarFromResultSet(rs));
             }
         } catch (SQLException e){
             e.printStackTrace();
         }
 
-        return cars;
+        return carDTOS;
     }
 
-    public Car create(Car dto) {
-        int key = -1;
-        try(PreparedStatement pstmt = this.connection.prepareStatement(INSERT, PreparedStatement.RETURN_GENERATED_KEYS)){
-            pstmt.setString(1, dto.getMake());
-            pstmt.setString(2, dto.getModel());
-            pstmt.setInt(3, dto.getYear());
-            pstmt.setString(4, dto.getColor());
-            pstmt.executeUpdate();
+    public Boolean create(CarDTO dto) {
 
-            ResultSet rs = pstmt.getGeneratedKeys();
-
-            if (rs != null && rs.next()) {
-                key = rs.getInt(1);
-            }
-        }catch(SQLException e){
-            e.printStackTrace();
-        }
-        return this.findById(key);
-    }
-
-    public Car update(Car dto) {
-        Car car = null;
-        try(PreparedStatement pstmt = this.connection.prepareStatement(UPDATE)) {
+        try{
+            PreparedStatement pstmt = connection.prepareStatement(INSERT);
             pstmt.setInt(1, dto.getId());
             pstmt.setString(2, dto.getMake());
             pstmt.setString(3, dto.getModel());
             pstmt.setInt(4, dto.getYear());
             pstmt.setString(5, dto.getColor());
-            pstmt.executeUpdate();
-            car = this.findById(dto.getId());
-        } catch(SQLException e){
-            e.printStackTrace();
-        }
-        return car;
-    }
-
-    public void delete(int id) {
-        try(PreparedStatement pstmt = this.connection.prepareStatement(DELETE)){
-            pstmt.setInt(1, id);
-            pstmt.executeUpdate();
+            int i = pstmt.executeUpdate();
+            if(i == 1){
+                return true;
+            }
         }catch(SQLException e){
             e.printStackTrace();
         }
+        return false;
+
     }
 
-    public Car getCarFromResultSet(ResultSet rs) throws SQLException {
+    public Boolean update(CarDTO dto) {
 
-        Car car = new Car();
-        car.setId(rs.getInt("id"));
-        car.setMake(rs.getString("make"));
-        car.setModel(rs.getString("model"));
-        car.setYear(rs.getInt("year"));
-        car.setColor(rs.getString("color"));
-        return car;
+        try{
+            PreparedStatement pstmt = connection.prepareStatement("UPDATE cars SET id=?, make=?, model=?, year=?, color = ? WHERE id=" + dto.getId());
+            pstmt.setInt(1, dto.getId());
+            pstmt.setString(2, dto.getMake());
+            pstmt.setString(3, dto.getModel());
+            pstmt.setInt(4, dto.getYear());
+            pstmt.setString(5, dto.getColor());
+            int i = pstmt.executeUpdate();
+            if(i == 1){
+                return true;
+            }
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return false;
+
+    }
+
+    public Boolean delete(int id) {
+
+        try{
+            PreparedStatement pstmt = connection.prepareStatement("DELETE FROM cars WHERE id = " + id);
+            int i = pstmt.executeUpdate();
+            if(i == 1){
+                return true;
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        return false;
+
+    }
+
+    public CarDTO getCarFromResultSet(ResultSet rs) throws SQLException {
+
+        CarDTO carDTO = new CarDTO();
+        carDTO.setId(rs.getInt("id"));
+        carDTO.setMake(rs.getString("make"));
+        carDTO.setModel(rs.getString("model"));
+        carDTO.setYear(rs.getInt("year"));
+        carDTO.setColor(rs.getString("color"));
+        return carDTO;
 
     }
 
