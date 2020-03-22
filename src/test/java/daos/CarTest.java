@@ -26,20 +26,20 @@ public class CarTest {
     }
 
     @Test
-    public void findAllTest(){
-        List<CarDTO> list = car.findAll();
-        int expectedSize = 5;
-        int actualSize = list.size();
-        assertEquals(expectedSize, actualSize);
-    }
-
-    @Test
     public void findCarByIdTest(){
         CarDTO newCar = car.findById(1);
         assertEquals("Honda", newCar.getMake());
         assertEquals("Civic", newCar.getModel());
         assertEquals(2019, newCar.getYear());
         assertEquals("red", newCar.getColor());
+    }
+
+    @Test
+    public void findAllTest(){
+        List<CarDTO> list = car.findAll();
+        int expectedSize = 5;
+        int actualSize = list.size();
+        assertEquals(expectedSize, actualSize);
     }
 
     @Test
@@ -59,9 +59,13 @@ public class CarTest {
     @Test
     public void UpdateCarTest(){
         car.create(carDTO);
-        carDTO.setColor("pink");
-        car.update(carDTO);
-        assertEquals("pink", carDTO.getColor());
+        CarDTO expected = new CarDTO(6, "Benz", "350", 2019, "pink");
+        car.update(expected);
+        CarDTO actual = car.findById(6);
+        assertEquals(expected.getColor(), actual.getColor());
+        assertEquals(expected.getModel(), actual.getModel());
+        assertEquals(expected.getYear(), actual.getYear());
+        assertEquals(expected.getMake(), actual.getMake());
     }
 
 }
